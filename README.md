@@ -6,13 +6,13 @@ This project is a simple C-based banking system using TCP sockets for client-ser
 
 - Server uses I/O multiplexing using (`select()`) to handle multiple clients
 - Supports operations like:
-  - `OPEN`
-  - `CLOSE`
-  - `DEPOSIT`
-  - `WITHDRAW`
-  - `BALANCE`
-  - `STATEMENT`
-  - `QUIT`
+  1. `OPEN`
+  2. `CLOSE`
+  3. `DEPOSIT`
+  4. `WITHDRAW`
+  5. `BALANCE`
+  6. `STATEMENT`
+  7. `QUIT`
 
 ## Build Instructions
 
