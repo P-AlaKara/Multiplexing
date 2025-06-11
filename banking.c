@@ -2,17 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h> // For srand() and time()
-#include <stdbool.h> // Not strictly needed for the bank.h interface, but kept from original
+#include <time.h> 
+#include <stdbool.h> 
 
-// Define the global accounts array and count as declared in bank.h
 Account accounts[MAX_ACCOUNTS];
-int account_count = 0; // Renamed from num_accounts
-
-// --- Helper Functions (Internal to banking.c) ---
+int account_count = 0; 
 
 // Helper function to find an account index by account number and PIN
-// Returns index on success, -1 on failure
 int find_account_index(const char* account_number, int pin) {
     for (int i = 0; i < account_count; i++) {
         // Check if the slot is active and account number matches
@@ -26,8 +22,7 @@ int find_account_index(const char* account_number, int pin) {
 }
 
 
-// Helper function to generate a unique account number (dynamically allocated)
-// Returns char* on success, NULL on failure
+// Helper function to generate a unique account number 
 char* generate_account_number() {
     // srand() should be called once in main server process
     char* acc_num = NULL;
@@ -71,16 +66,11 @@ char* generate_account_number() {
     return acc_num;
 }
 
-// Helper function to generate a 4-digit PIN
-// Returns int (4-digit pin)
-// Note: This helper is not used by open_account as per bank.h signature
 int generate_pin_internal() {
     // srand() should be called once in main server process
     return 1000 + (rand() % 9000);
 }
 
-
-// --- Functions Implementing bank.h Interface ---
 
 // Open a new bank account
 // Returns Account struct on success, Account with is_active=0 and account_number=NULL on failure
@@ -135,9 +125,8 @@ Account open_account(const char* name, const char* national_id, const char* acco
 
     // Initialize transaction history (Statement struct)
     accounts[account_index].statement.transaction_count = 0;
-    // Record initial deposit as the first transaction (only amount stored as per bank.h Statement struct)
+    // Record initial deposit as the first transaction
     if (accounts[account_index].statement.transaction_count < MAX_TRANSACTIONS) {
-        // CORRECTED LINE: Assign directly to the double array element
         accounts[account_index].statement.transactions[accounts[account_index].statement.transaction_count] = initial_deposit; // Store as positive for deposit
         accounts[account_index].statement.transaction_count++;
     }
@@ -147,16 +136,9 @@ Account open_account(const char* name, const char* national_id, const char* acco
     if (account_index >= account_count) {
          account_count = account_index + 1;
     }
-    // Note: account_count now represents the highest index + 1 that is active or has been active.
-    // This is different from the original num_accounts which was a strict count of active accounts.
-    // We will iterate up to MAX_ACCOUNTS in save/load and check is_active.
-
-    // Copy the successfully created account details from the global array
-    // to the struct we will return.
     new_account_details = accounts[account_index];
 
-    // Save accounts to file after a successful creation
-    save_accounts_to_file("accounts_data.txt"); // Use a default filename
+    save_accounts_to_file("accounts_data.txt"); 
 
     return new_account_details; // Return the populated Account struct
 }
@@ -206,7 +188,6 @@ int withdraw(const char* account_number, int pin, double amount) {
 
         // Record transaction (circular buffer for last MAX_TRANSACTIONS)
         if (accounts[index].statement.transaction_count < MAX_TRANSACTIONS) {
-            // CORRECTED: Assign directly to the double array element
             accounts[index].statement.transactions[accounts[index].statement.transaction_count] = -amount; // Store as negative for withdrawal
             accounts[index].statement.transaction_count++;
         } else {
@@ -214,7 +195,6 @@ int withdraw(const char* account_number, int pin, double amount) {
             for (int j = 0; j < MAX_TRANSACTIONS - 1; j++) {
                 accounts[index].statement.transactions[j] = accounts[index].statement.transactions[j + 1];
             }
-            // CORRECTED: Assign directly to the double array element
             accounts[index].statement.transactions[MAX_TRANSACTIONS - 1] = -amount; // Store as negative
         }
 
@@ -244,7 +224,6 @@ int deposit(const char* account_number, int pin, double amount) {
 
         // Record transaction (circular buffer for last MAX_TRANSACTIONS)
         if (accounts[index].statement.transaction_count < MAX_TRANSACTIONS) {
-            // CORRECTED: Assign directly to the double array element
             accounts[index].statement.transactions[accounts[index].statement.transaction_count] = amount; // Store as positive for deposit
             accounts[index].statement.transaction_count++;
         } else {
@@ -252,7 +231,6 @@ int deposit(const char* account_number, int pin, double amount) {
             for (int j = 0; j < MAX_TRANSACTIONS - 1; j++) {
                 accounts[index].statement.transactions[j] = accounts[index].statement.transactions[j + 1];
             }
-            // CORRECTED: Assign directly to the double array element
             accounts[index].statement.transactions[MAX_TRANSACTIONS - 1] = amount; // Store as positive
         }
 
@@ -363,7 +341,7 @@ int load_accounts_from_file(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         // No existing accounts file, start fresh. This is not an error.
-        // fprintf(stderr, "No existing accounts file found. Starting fresh.\n"); // Removed verbose message
+        // fprintf(stderr, "No existing accounts file found. Starting again\n"); - verbose for no reason
         account_count = 0;
         // Initialize all account slots as inactive
         for(int i = 0; i < MAX_ACCOUNTS; ++i) {
@@ -477,7 +455,7 @@ int load_accounts_from_file(const char* filename) {
                  fprintf(stderr, "Warning: File format error or premature EOF at account %d (expected separator).\n", i+1);
              }
              // Stop loading
-             account_count = i + 1; // Update account_count to the last processed index + 1
+             account_count = i + 1; 
              break;
         }
          if (strncmp(separator_buf, "---", 3) != 0) {
@@ -485,14 +463,9 @@ int load_accounts_from_file(const char* filename) {
              // Continue loading but be aware of potential issues
          }
 
-        // Update account_count to the highest index processed + 1
         account_count = i + 1;
     }
 
     fclose(file);
-    return 0; // Success
+    return 0; 
 }
-
-// Add srand(time(NULL)) in your main server function before calling any banking functions.
-// Also, ensure you call load_accounts_from_file at the start of your server and
-// save_accounts_to_file periodically or on server shutdown.
