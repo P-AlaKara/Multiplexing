@@ -28,7 +28,7 @@ cd Multiplexing
 ### 2. Compile the Server
 
 ```bash
-gcc server.c bank.c -o server
+gcc server.c banking.c -o server
 ```
 
 ### 3. Compile the Client
@@ -81,4 +81,7 @@ QUIT;
 * Server concurrency: `select()`-based I/O multiplexing
 * Data storage: File-based (`accounts_data.txt`)
 * Max clients: Defined by `FD_SETSIZE`
-  
+
+## Credits
+
+banking.c was developed by @NajmaMohamed
